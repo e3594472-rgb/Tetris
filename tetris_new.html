@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris Game</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Arial', sans-serif;
+    }
+    .container {
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      display: flex;
+      gap: 30px;
+    }
+    h1 {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 32px;
+    }
+    .game-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #tetris {
+      background: #111;
+      border: 4px solid #00ff00;
+      display: grid;
+      grid-template-rows: repeat(20, 30px);
+      grid-template-columns: repeat(10, 30px);
+      gap: 2px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(0,255,0,0.3);
+    }
+    .cell {
+      width: 30px;
+      height: 30px;
+      background: #0a0a0a;
+      border-radius: 2px;
+      border: 1px solid #222;
+    }
+    .cell.filled {
+      border: none;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    }
+    .info-section {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 20px;
+      min-width: 200px;
+      color: #fff;
+    }
+    .info-item {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .info-label {
+      color: #999;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    .info-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00ff00;
+    }
+    #next {
+      background: #111;
+      border: 2px solid #00ff00;
+      display: grid;
+      grid-template-rows: repeat(4, 20px);
+      grid-template-columns: repeat(4, 20px);
+      gap: 1px;
+      padding: 5px;
+      margin-top: 5px;
+    }
+    #next .cell {
+      width: 20px;
+      height: 20px;
+    }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+    #startBtn, #pauseBtn {
+      background: #4466ff;
+      color: #fff;
+      flex: 1;
+      min-width: 100px;
+    }
+    #startBtn:hover, #pauseBtn:hover {
+      background: #2244dd;
+      transform: scale(1.05);
+    }
+    #startBtn:active, #pauseBtn:active {
+      transform: scale(0.98);
+    }
+    .controls {
+      color: #999;
+      font-size: 12px;
+      margin-top: 15px;
+      line-height: 1.6;
+    }
+    .leaderboard {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 20px;
+      min-width: 220px;
+      color: #fff;
+    }
+    .leaderboard h3 {
+      color: #00ff00;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 18px;
+    }
+    .leaderboard ol {
+      list-style-position: inside;
+      padding: 0;
+    }
+    .leaderboard li {
+      padding: 8px;
+      border-bottom: 1px solid #444;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #ccc;
+    }
+    .leaderboard li:last-child {
+      border-bottom: none;
+    }
+    .leaderboard li span {
+      color: #00ff00;
+      font-weight: bold;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-content {
+      background: #2a2a2a;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 500px;
+      border: 3px solid #4466ff;
+      color: #fff;
+      text-align: center;
+    }
+    .modal-content h2 {
+      color: #4466ff;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    .modal-content p {
+      margin: 15px 0;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .modal-content input {
+      width: 100%;
+      padding: 10px;
+      margin: 15px 0;
+      border: 2px solid #4466ff;
+      border-radius: 5px;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 16px;
+    }
+    .modal-content button {
+      margin-top: 10px;
+      width: 100%;
+      padding: 12px;
+      background: #4466ff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .modal-content button:hover {
+      background: #2244dd;
+    }
+    .game-over-text {
+      font-size: 48px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+        padding: 20px;
+      }
+      .info-section, .leaderboard {
+        min-width: unset;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div>
+      <h1>🎮 TETRIS 🎮</h1>
+      <div class="game-section">
+        <div id="tetris"></div>
+        <div class="buttons">
+          <button id="startBtn">Start Game</button>
+          <button id="pauseBtn" disabled>Pause</button>
+        </div>
+        <div class="controls">
+          ← → Move | ↓ Drop | ↑/Space Rotate | Enter Hard Drop
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="info-section">
+        <div class="info-item">
+          <div class="info-label">SCORE</div>
+          <div class="info-value" id="score">0</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">LEVEL</div>
+          <div class="info-value" id="level">1</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">LINES</div>
+          <div class="info-value" id="lines">0</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">NEXT</div>
+          <div id="next"></div>
+        </div>
+      </div>
+
+      <div class="leaderboard">
+        <h3>🏆 LEADERBOARD</h3>
+        <ol id="leaderboard"></ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz Modal -->
+  <div id="quizModal" class="modal">
+    <div class="modal-content">
+      <h2>📚 Grammar Quiz</h2>
+      <p id="quizQuestion"></p>
+      <form id="quizForm">
+        <input type="text" id="quizAnswer" placeholder="Your answer..." autocomplete="off" required>
+        <button type="submit">Submit</button>
+      </form>
+      <p id="quizFeedback" style="color: #ff4444;"></p>
+    </div>
+  </div>
+
+  <!-- Record Modal -->
+  <div id="recordModal" class="modal">
+    <div class="modal-content">
+      <div class="game-over-text">GAME OVER!</div>
+      <h2>🎉 Game Over!</h2>
+      <p>Your Score: <span id="finalScore" style="color: #4466ff; font-weight: bold;">0</span></p>
+      <form id="recordForm">
+        <input type="text" id="playerName" placeholder="Enter your name..." maxlength="20" required>
+        <button type="submit">Save Record</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+      const ROWS = 20, COLS = 10;
+      const SHAPES = [
+          { shape: [[1, 1, 1, 1]], color: '#ff4444' },
+          { shape: [[1, 1], [1, 1]], color: '#ffdd44' },
+          { shape: [[0, 1, 0], [1, 1, 1]], color: '#44ff44' },
+          { shape: [[1, 1, 0], [0, 1, 1]], color: '#44ffff' },
+          { shape: [[0, 1, 1], [1, 1, 0]], color: '#ff44ff' },
+          { shape: [[1, 1, 1], [0, 0, 1]], color: '#4444ff' },
+          { shape: [[1, 1, 1], [1, 0, 0]], color: '#ff8844' }
+      ];
+
+      const QUESTIONS = [
+          { q: "The letters___ (write) by the author every day.", opt: "", a: "are written"},
+          { q: "The book ___ (read) by millions every day.", opt: "", a: "is read" },
+          { q: "The cake ___ (eat) at the party yesterday.", opt: "", a: "was eaten" },
+          { q: "The picture ___ (draw) by the artist last week.", opt: "", a: "was drawn" },
+          { q: "The window ___ (break) by the storm yesterday.", opt: "", a: "was broken" },
+          { q: "The homework ___ (do) by the students yesterday.", opt: "", a: "was done" },
+          { q: "The prize ___ (give) to the winner yesterday.", opt: "", a: "was given" },
+          { q: "The money ___ (steal) from the bank last month.", opt: "", a: "was stolen" },
+          { q: "The game ___ (win) by our team yesterday.", opt: "", a: "was won" },
+           { q: "The children ___ (take) to school every day.", opt: "", a: "are taken" },
+         { q: "The ring ___ (find) in the garden yesterday.", opt: "", a: "was found" },
+          { q: "The box ___ usually (hide) under the bed.", opt: "", a: "is hidden" },
+          { q: "The story ___ (tell) by the teacher every day.", opt: "", a: "is told" },
+          { q: "The bell ___ (ring) every morning.", opt: "", a: "is rung" },
+          { q: "The movie ___ (see) by millions regularly.", opt: "", a: "is seen" },
+          { q: "The fence ___ (build) last year.", opt: "", a: "was built" },
+          { q: "The tree ___ (fall) during the storm yesterday.", opt: "", a: "was fallen" },
+          { q: "The key ___ usually (leave) on the table.", opt: "", a: "is left" },
+          { q: "The decision ___ (make)  this morning.", opt: "", a: "was made" },
+          { q: "The rule ___ (break) by everyone regularly.", opt: "", a: "is broken" },
+          { q: "The vase ___ (break) during the event yesterday.", opt: "", a: "was broken" },
+          { q: "The film ___ (shoot) in Italy last year.", opt: "", a: "was shot" },
+          { q: "The truth ___ (tell) by the witness yesterday.", opt: "", a: "was told" },
+          { q: "The gifts ___ (give) to the children last morning.", opt: "", a: "were given" },
+          { q: "The news ___ (bring) by the messenger yesterday.", opt: "", a: "was brought" },
+          { q: "The supplies ___ usually (bring) to the camp.", opt: "", a: "are brought" },
+        { q: "The clothes ___ (hang) on the line every morning.", opt: "", a: "are hung" },
+          { q: "The agreement ___ (sign) yesterday.", opt: "", a: "was signed" },
+         { q: "The song ___ (hear) from the street yesterday.", opt: "", a: "was heard" },
+          { q: "The light ___ often (see) in the distance.", opt: "", a: "is seen" },
+          { q: "The coin ___ (lose) in the park yesterday.", opt: "", a: "was lost" },
+          { q: "The door ___ (shut) at midnight every night.", opt: "", a: "is shut" },
+         { q: "The fish ___ (catch) in the river yesterday.", opt: "", a: "was caught" },
+          { q: "The letters ___ (deliver) by the postman every day.", opt: "", a: "are delivered" },
+          { q: "The building ___ (construct) last year.", opt: "", a: "was constructed" },
+          { q: "The dinner ___ (serve) every day at 6 PM.", opt: "", a: "is served" },
+          { q: "The homework ___ (complete) yesterday.", opt: "", a: "was completed" },
+          { q: "The windows ___ (clean) every morning.", opt: "", a: "are cleaned" },
+          { q: "The car ___ usually (park) in the garage.", opt: "", a: "is parked" },
+          { q: "The movie ___ (release) last week.", opt: "", a: "was released" },
+          { q: "The package ___ (deliver) tomorrow.", opt: "", a: "is delivered" },
+          { q: "The report ___ (submit) last month.", opt: "", a: "was submitted" },
+          { q: "The coffee ___ (make) in the morning.", opt: "", a: "is made" },
+          { q: "The office ___ (clean) after working hours.", opt: "", a: "is cleaned" },
+          { q: "These books ___ (not sell) in regular stores.", opt: "", a: "are not sold" },
+          { q: "Dinner ___ (cook) by my mother every day.", opt: "", a: "is cooked" },
+          { q: "This room ___ (not use) very often.", opt: "", a: "is not used" },
+          { q: "All the flights to Paris ___ (cancel) due to the storm yesterday.", opt: "", a: "were cancelled" }
+      ];
+
+      let board, current, next, score, level, lines, timer, gameActive, gamePaused, leaderboard;
+      let quizActive = false, quizStartTime = 0, quizResolve = null, usedQuestions = [];
+
+      const tetris = document.getElementById('tetris');
+      const scoreDisplay = document.getElementById('score');
+      const levelDisplay = document.getElementById('level');
+      const linesDisplay = document.getElementById('lines');
+      const nextDisplay = document.getElementById('next');
+      const startBtn = document.getElementById('startBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const leaderboardDisplay = document.getElementById('leaderboard');
+      const quizModal = document.getElementById('quizModal');
+      const recordModal = document.getElementById('recordModal');
+
+      function resetBoard() {
+          board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      }
+
+      function randomPiece() {
+          let p = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+          return {
+              shape: p.shape.map(row => [...row]),
+              color: p.color,
+              row: -2,
+              col: Math.floor(COLS / 2) - 2
+          };
+      }
+
+      function draw() {
+          tetris.innerHTML = '';
+          for (let r = 0; r < ROWS; r++) {
+              for (let c = 0; c < COLS; c++) {
+                  const cell = document.createElement('div');
+                  cell.className = 'cell' + (board[r][c] ? ' filled' : '');
+                  if (board[r][c]) cell.style.background = board[r][c];
+                  tetris.appendChild(cell);
+              }
+          }
+
+          if (current) {
+              for (let r = 0; r < current.shape.length; r++) {
+                  for (let c = 0; c < current.shape[r].length; c++) {
+                      if (current.shape[r][c]) {
+                          let y = current.row + r, x = current.col + c;
+                          if (y >= 0 && y < ROWS && x >= 0 && x < COLS) {
+                              let idx = y * COLS + x;
+                              tetris.children[idx].classList.add('filled');
+                              tetris.children[idx].style.background = current.color;
+                          }
+                      }
+                  }
+              }
+          }
+      }
+
+      function drawNext() {
+          nextDisplay.innerHTML = '';
+          for (let i = 0; i < 4; i++) {
+              for (let j = 0; j < 4; j++) {
+                  const cell = document.createElement('div');
+                  cell.className = 'cell' + (i < next.shape.length && j < next.shape[i].length && next.shape[i][j] ? ' filled' : '');
+                  if (i < next.shape.length && j < next.shape[i].length && next.shape[i][j]) cell.style.background = next.color;
+                  nextDisplay.appendChild(cell);
+              }
+          }
+      }
+
+      function canMove(shape, row, col) {
+          for (let r = 0; r < shape.length; r++) {
+              for (let c = 0; c < shape[r].length; c++) {
+                  if (shape[r][c]) {
+                      let y = row + r, x = col + c;
+                      if (x < 0 || x >= COLS || y >= ROWS || (y >= 0 && board[y][x])) return false;
+                  }
+              }
+          }
+          return true;
+      }
+
+      function merge() {
+          for (let r = 0; r < current.shape.length; r++) {
+              for (let c = 0; c < current.shape[r].length; c++) {
+                  if (current.shape[r][c]) {
+                      let y = current.row + r, x = current.col + c;
+                      if (y >= 0) board[y][x] = current.color;
+                  }
+              }
+          }
+      }
+
+      async function clearLines() {
+          let cleared = 0;
+          for (let r = ROWS - 1; r >= 0; r--) {
+              if (board[r].every(x => x)) {
+                  board.splice(r, 1);
+                  board.unshift(Array(COLS).fill(null));
+                  cleared++;
+                  r++;
+              }
+          }
+          if (cleared) {
+              lines += cleared;
+              score += cleared * cleared * 100;
+              level = Math.floor(lines / 10) + 1;
+              scoreDisplay.textContent = score;
+              levelDisplay.textContent = level;
+              linesDisplay.textContent = lines;
+
+              // Show quiz for each cleared line
+              for (let i = 0; i < cleared; i++) {
+                  await showQuiz();
+              }
+          }
+      }
+
+      function getRandomQuestion() {
+          if (usedQuestions.length === QUESTIONS.length) usedQuestions = [];
+          let idx;
+          do {
+              idx = Math.floor(Math.random() * QUESTIONS.length);
+          } while (usedQuestions.includes(idx));
+          usedQuestions.push(idx);
+          return QUESTIONS[idx];
+      }
+
+      function showQuiz() {
+          return new Promise((resolve) => {
+              const q = getRandomQuestion();
+              let questionText = q.q;
+              if (q.opt) {
+                  questionText += '\n\n(' + q.opt + ')';
+              }
+              document.getElementById('quizQuestion').textContent = questionText;
+              document.getElementById('quizAnswer').value = '';
+              document.getElementById('quizFeedback').textContent = '';
+              quizModal.classList.add('show');
+              quizActive = true;
+              quizStartTime = Date.now();
+              quizResolve = resolve;
+              document.getElementById('quizAnswer').focus();
+          });
+      }
+
+      document.getElementById('quizForm').onsubmit = function (e) {
+          e.preventDefault();
+          if (!quizActive) return;
+          const answer = document.getElementById('quizAnswer').value.trim();
+          const q = QUESTIONS[usedQuestions[usedQuestions.length - 1]];
+          if (answer.toLowerCase() === q.a.toLowerCase()) {
+              const timeTaken = (Date.now() - quizStartTime) / 1000;
+              let bonus = Math.max(0, Math.round(100 - timeTaken * 10));
+              if (bonus > 0) {
+                  score += bonus;
+                  scoreDisplay.textContent = score;
+              }
+              quizModal.classList.remove('show');
+              quizActive = false;
+              if (quizResolve) quizResolve();
+          } else {
+              document.getElementById('quizFeedback').textContent = '❌ Wrong! Try again.';
+          }
+      };
+
+      function drop() {
+          if (!gameActive || gamePaused || quizActive || !current) return;
+          if (canMove(current.shape, current.row + 1, current.col)) {
+              current.row++;
+          } else {
+              merge();
+              clearLines();
+              current = next;
+              next = randomPiece();
+              drawNext();
+              if (!canMove(current.shape, current.row, current.col)) {
+                  endGame();
+                  return;
+              }
+          }
+          draw();
+      }
+
+      function rotate() {
+          let s = current.shape[0].map((_, i) => current.shape.map(row => row[i]).reverse());
+          if (canMove(s, current.row, current.col)) current.shape = s;
+      }
+
+      function move(d) {
+          if (canMove(current.shape, current.row, current.col + d)) current.col += d;
+      }
+
+      function hardDrop() {
+          while (canMove(current.shape, current.row + 1, current.col)) current.row++;
+          drop();
+      }
+
+      function saveScore() {
+          if (!leaderboard) leaderboard = [];
+          leaderboard.push(score);
+          leaderboard.sort((a, b) => b - a);
+          leaderboard = leaderboard.slice(0, 5);
+          localStorage.setItem('tetris_scores', JSON.stringify(leaderboard));
+          loadLeaderboard();
+      }
+
+      function loadLeaderboard() {
+          leaderboard = JSON.parse(localStorage.getItem('tetris_scores')) || [];
+          leaderboardDisplay.innerHTML = '';
+          leaderboard.forEach((s, i) => {
+              const li = document.createElement('li');
+              li.innerHTML = `<span>${s}</span>`;
+              leaderboardDisplay.appendChild(li);
+          });
+      }
+
+      function startGame() {
+          resetBoard();
+          score = 0;
+          lines = 0;
+          level = 1;
+          gameActive = true;
+          gamePaused = false;
+          usedQuestions = [];
+          scoreDisplay.textContent = score;
+          levelDisplay.textContent = level;
+          linesDisplay.textContent = lines;
+          startBtn.disabled = true;
+          pauseBtn.disabled = false;
+          pauseBtn.textContent = 'Pause';
+          current = randomPiece();
+          next = randomPiece();
+          draw();
+          drawNext();
+          clearInterval(timer);
+          timer = setInterval(drop, Math.max(100, 500 - level * 30));
+      }
+
+      function endGame() {
+          gameActive = false;
+          clearInterval(timer);
+          startBtn.disabled = false;
+          pauseBtn.disabled = true;
+          document.getElementById('finalScore').textContent = score;
+          recordModal.classList.add('show');
+      }
+
+      document.getElementById('recordForm').onsubmit = function (e) {
+          e.preventDefault();
+          const name = document.getElementById('playerName').value || 'Player';
+          if (!leaderboard) leaderboard = [];
+          leaderboard.push({ name, score });
+          leaderboard.sort((a, b) => b.score - a.score);
+          leaderboard = leaderboard.slice(0, 5);
+          localStorage.setItem('tetris_scores', JSON.stringify(leaderboard));
+          loadLeaderboard();
+          recordModal.classList.remove('show');
+      };
+
+      document.addEventListener('keydown', e => {
+          if (!gameActive || quizActive) return;
+          if (e.key === 'ArrowLeft') move(-1);
+          else if (e.key === 'ArrowRight') move(1);
+          else if (e.key === 'ArrowDown') drop();
+          else if (e.key === ' ' || e.key === 'ArrowUp') rotate();
+          else if (e.key === 'Enter') hardDrop();
+          else if (e.key === 'p' || e.key === 'P') pauseBtn.click();
+          draw();
+      });
+
+      startBtn.onclick = startGame;
+      pauseBtn.onclick = () => {
+          gamePaused = !gamePaused;
+          pauseBtn.textContent = gamePaused ? 'Resume' : 'Pause';
+          if (!gamePaused) drop();
+      };
+
+      loadLeaderboard();
+      resetBoard();
+      current = randomPiece();
+      next = randomPiece();
+      draw();
+      drawNext();
+  </script>
+</body>
+</html>
